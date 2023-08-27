@@ -28,7 +28,7 @@ function resourceStart(resource)
 	setMapName("Los Santos")
 	setRuleValue("Script Version", exports.global:getScriptVersion())
 	setRuleValue("Author", "OwlGaming - MTA Server Development Team")
-	setRuleValue("Website", "www.owlgaming.net")
+	setRuleValue("Website", "https://discord.gg/S5PDPdDeac")
 	setGlitchEnabled ( "baddrivebyhitbox", false )
 	setFPSLimit(60) -- 72 is the real max before issues arise
 
@@ -95,5 +95,5 @@ addEvent("resetName", true )
 addEventHandler("resetName", getRootElement(), resetNick)
 
 function makeOwlName(thePlayer)
-	setPlayerName(thePlayer, "Owl.Player."..tostring(math.random(0,9))..tostring(math.random(0,9))..tostring(math.random(0,9))..tostring(math.random(0,9)))
+	setPlayerName(thePlayer, "PWP.Spēlētājs."..tostring(math.random(0,9))..tostring(math.random(0,9))..tostring(math.random(0,9))..tostring(math.random(0,9)))
 end

@@ -51,7 +51,7 @@ function displayGUI(remotelanguages, rcurrslot)
 		local x = scrWidth/2 - (width/2)
 		local y = scrHeight/2 - (height/2)
 		
-		wLanguages = guiCreateWindow(x, y, width, height, "Languages: " .. string.gsub(getPlayerName(localPlayer), "_", " "), false)
+		wLanguages = guiCreateWindow(x, y, width, height, "Languages - " .. string.gsub(getPlayerName(localPlayer), "_", " "), false)
 		
 		tlanguages = remotelanguages
 		currslot = tonumber(rcurrslot)
@@ -62,7 +62,7 @@ function displayGUI(remotelanguages, rcurrslot)
 			local L = tlanguages[i]
 			if L then
 				local lang, skill = unpack(L)
-				local imgLang = guiCreateStaticImage(0.05, 0.1+offset, 0.025, 0.025, ":social/images/flags/" .. (flags[lang] or 'zz') .. ".png", true, wLanguages)
+				--local imgLang = guiCreateStaticImage(0.05, 0.1+offset, 0.025, 0.025, ":social/images/flags/" .. (flags[lang] or 'zz') .. ".png", true, wLanguages)
 				local lLangName = guiCreateLabel(0.1, 0.092+offset, 0.9, 0.1, getLanguageName(lang), true, wLanguages)
 				guiSetFont(lLangName, "default-bold-small")
 				

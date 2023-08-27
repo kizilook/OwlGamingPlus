@@ -31,7 +31,7 @@ function doCheck(sourcePlayer, command, ...)
 							dbFree(qh)
 						end
 
-						local qh = dbQuery(exports.mysql:getConn("core"), "SELECT punishpoints, credits FROM accounts WHERE id=?", getElementData(checkTarget, "account:id"))
+						local qh = dbQuery(exports.mysql:getConn("mta"), "SELECT punishpoints, credits FROM accounts WHERE id=?", getElementData(checkTarget, "account:id"))
 						local result = dbPoll( qh, 10000 )
 						if result and #result > 0 then
 							points = result[1]["punishpoints"] or "?" 
@@ -164,7 +164,7 @@ function doCheck(sourcePlayer, command, ...)
 						outputChatBox("Account/Player '"..offlineTarget.."' not found", sourcePlayer, 255, 0, 0)
 					end
 					dbFree(qh)
-				end, {qh, offlineTarget}, exports.mysql:getConn("core"), preparedQuery, offlineTarget)
+				end, {qh, offlineTarget}, exports.mysql:getConn("mta"), preparedQuery, offlineTarget)
 			end
 		end
 	end
@@ -286,7 +286,7 @@ function removeAdminHistoryLine(ID)
 			end
 		elseif (tonumber(sqlQuery["action"]) == 8) then -- /punish
 			local accountNumber = tostring(sqlQuery["user"])
-			dbExec(exports.mysql:getConn("core"), "UPDATE `accounts` SET `punishpoints`=GREATEST(punishpoints-?, 0) WHERE `ID`=? AND `punishpoints` > 0", sqlQuery["duration"], accountNumber)
+			dbExec(exports.mysql:getConn("mta"), "UPDATE `accounts` SET `punishpoints`=GREATEST(punishpoints-?, 0) WHERE `ID`=? AND `punishpoints` > 0", sqlQuery["duration"], accountNumber)
 			for i, player in pairs(getElementsByType("player")) do
 				if getElementData(player, "account:id") == tonumber(accountNumber) then
 					local currentpoints = getElementData(player, "punishment:points")

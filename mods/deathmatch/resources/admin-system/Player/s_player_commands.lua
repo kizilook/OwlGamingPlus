@@ -2349,7 +2349,7 @@ function charityGC(thePlayer, cmd, amount)
 						return
 					end
 			
-					if dbExec(exports.mysql:getConn("core"), "UPDATE `accounts` SET `credits`=`credits`-? WHERE `id`=? ", amount, id) then
+					if dbExec(exports.mysql:getConn("mta"), "UPDATE `accounts` SET `credits`=`credits`-? WHERE `id`=? ", amount, id) then
 						setElementData(thePlayer, "credits", currentGC-amount, true)
 						exports.global:sendMessageToAdmins("AdmWrn: "..getElementData(thePlayer, "account:username").." charitied "..amount.." GCs.")
 						outputChatBox("You have charitied "..amount.." GCs.", thePlayer, 0, 255, 0)
@@ -2358,7 +2358,7 @@ function charityGC(thePlayer, cmd, amount)
 						outputChatBox("ERROR: TAKEGC #001", thePlayer, 255, 0, 0)
 					end
 				end
-			end, {thePlayer, amount, id}, exports.mysql:getConn("core"), "SELECT `credits` FROM `accounts` WHERE `id`=?  LIMIT 1", id)
+			end, {thePlayer, amount, id}, exports.mysql:getConn("mta"), "SELECT `credits` FROM `accounts` WHERE `id`=?  LIMIT 1", id)
 	end
 end
 addCommandHandler("charitygc", charityGC)
@@ -2417,7 +2417,7 @@ end, false )
 function clearWhois(thePlayer, command)
 	if exports.integration:isPlayerHeadAdmin(thePlayer) or exports.integration:isPlayerLeadAdmin(thePlayer) then
 		dbExec(exports.mysql:getConn("mta"), "UPDATE account_details SET mtaserial=NULL WHERE mtaserial=?", getPlayerSerial(thePlayer))
-		dbExec(exports.mysql:getConn("core"), "UPDATE accounts SET ip=NULL WHERE ip=?", getPlayerIP(thePlayer))
+		dbExec(exports.mysql:getConn("mta"), "UPDATE accounts SET ip=NULL WHERE ip=?", getPlayerIP(thePlayer))
 
 		exports.logs:dbLog(thePlayer, 4, thePlayer, command)
 

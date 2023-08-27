@@ -22,8 +22,8 @@ addEvent("account:changingchar", true)
 
 -- Shared variables
 scriptVersion = exports.global:getScriptVersion()
-newsURL = "http://owlgaming.net/server/news.php"
-rulesURL = "http://owlgaming.net/server/rules.php"
+newsURL = "https://discord.gg/S5PDPdDeac"
+rulesURL = "https://discord.gg/S5PDPdDeac"
 
 -- Password hashes
 passwordPrivateHash = "dsasdf98328dn80qmd09RoleplayGhMTAgfhneofinasd0892"

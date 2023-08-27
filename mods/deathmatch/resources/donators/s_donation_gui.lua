@@ -42,7 +42,7 @@ function showDonationGUI(donor)
 		local gameAccountID = getElementData(client, "account:id")
 		if (gameAccountID) then
 			if (gameAccountID > 0) then
-				local mResult1 = dbQuery(exports.mysql:getConn("core"), "SELECT `credits` FROM `accounts` WHERE `id`=?", gameAccountID)
+				local mResult1 = dbQuery(exports.mysql:getConn("mta"), "SELECT `credits` FROM `accounts` WHERE `id`=?", gameAccountID)
 				local mResult1 = dbPoll(mResult1, 10000)
 				if (mResult1) then
 					donPoints = tonumber(mResult1[1]["credits"]) or 0
@@ -53,7 +53,7 @@ function showDonationGUI(donor)
 		local donation_history = {}
 
 		-- paypal
-		local qh = dbQuery( exports.mysql:getConn('core'), "SELECT `txn_id`, `payer_email`, `mc_gross`, `date`, TO_SECONDS(date) AS datesec, `accounts`.`username` AS `donor`, (SELECT `username` FROM `accounts` WHERE `accounts`.`id`=`purchases`.`donated_for`) AS `donated_for` FROM `purchases` LEFT JOIN `accounts` ON `purchases`.`donor` = `accounts`.`id` WHERE `donor`=? OR `donated_for`=? ", gameAccountID, gameAccountID )
+		local qh = dbQuery( exports.mysql:getConn('mta'), "SELECT `txn_id`, `payer_email`, `mc_gross`, `date`, TO_SECONDS(date) AS datesec, `accounts`.`username` AS `donor`, (SELECT `username` FROM `accounts` WHERE `accounts`.`id`=`purchases`.`donated_for`) AS `donated_for` FROM `purchases` LEFT JOIN `accounts` ON `purchases`.`donor` = `accounts`.`id` WHERE `donor`=? OR `donated_for`=? ", gameAccountID, gameAccountID )
 		local results = dbPoll( qh, 10000 )
 		if results then
 			for _, res in pairs( results ) do
@@ -172,7 +172,7 @@ function activateDonationPerk(thePerk, ...)
 
 	local gameAccountID = getElementData(source, "account:id")
 	if gameAccountID and gameAccountID > 0 then
-		local mResult1 = dbQuery(exports.mysql:getConn("core"), "SELECT `credits` FROM `accounts` WHERE `id`=?", gameAccountID)
+		local mResult1 = dbQuery(exports.mysql:getConn("mta"), "SELECT `credits` FROM `accounts` WHERE `id`=?", gameAccountID)
 		local mResult1 = dbPoll(mResult1, 10000)
 		if (mResult1) then
 			donPoints = tonumber(mResult1[1]["credits"]) or 0
@@ -208,7 +208,7 @@ function activateDonationPerk(thePerk, ...)
 			addPurchaseHistory(client, "Game Coins Transferred ("..data.amount.." GCs to "..data.target..")", -data.total)
 			showDonationGUI(client)
 
-			if dbExec(exports.mysql:getConn("core"), "UPDATE `accounts` SET `credits`=`credits`+? WHERE `username`=? ", data.amount, data.target) then
+			if dbExec(exports.mysql:getConn("mta"), "UPDATE `accounts` SET `credits`=`credits`+? WHERE `username`=? ", data.amount, data.target) then
 				for i, player in pairs(getElementsByType("player")) do
 					if getElementData(player, "account:username") == data.target then
 						local cur = getElementData(player, "credits")

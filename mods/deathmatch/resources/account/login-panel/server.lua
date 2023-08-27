@@ -1,6 +1,6 @@
 --[[
 * ***********************************************************************************************************************
-* Copyright (c) 2015 OwlGaming Community - All Rights Reserved
+* 2023 OwlGaming Community - All Rights Reserved
 * All rights reserved. This program and the accompanying materials are private property belongs to OwlGaming Community
 * Unauthorized copying of this file, via any medium is strictly prohibited
 * Proprietary and confidential
@@ -68,13 +68,13 @@ function playerLogin(username,password,checksave)
 					local accountData = result[1]
 					-- Check if the account is banned
 					if exports.bans:checkAccountBan(accountData["id"]) then
-						triggerClientEvent(client,"set_warning_text",client,"Login","Account is banned. Appeal at www.owlgaming.net")
+						triggerClientEvent(client,"set_warning_text",client,"Login","Your gaming account is banned")
 						exports.logs:dbLog("ac"..tostring(accountData["id"]), 27, "ac"..tostring(accountData["id"]), "Rejected connection from " .. getPlayerIP(client) .. " - ".. getPlayerSerial(client) .. " as account is banned.")
 						return false
 					end
 
 					--Now check if passwords are matched or the account is activated, this is to prevent user with fake emails.
-					triggerClientEvent(client,"set_authen_text",client,"Login","Password Accepted! Authenticating..")
+					triggerClientEvent(client,"set_authen_text",client,"Login","Password accepted..")
 					-- Check if old method
 					if not string.find(accountData["password"], "$", 1, true) then -- Plain search, not regex
 						local encryptionRule = accountData["salt"]
@@ -87,16 +87,16 @@ function playerLogin(username,password,checksave)
 
 						triggerClientEvent(client,"set_authen_text",client,"Login","Converting Legacy Password..")
 						-- Run conversions // https://docs.djangoproject.com/en/1.10/topics/auth/passwords/#increasing-the-work-factor // Since Django prefixes it's passwords with the type we do this for compatibility
-						local new_pass = "bcrypt_sha256$" .. bcrypt_hashpw(sha256(password):lower(), bcrypt_gensalt(12)) -- 12 work factor // https://github.com/django/django/blob/master/django/contrib/auth/hashers.py#L404
-						if not dbExec(exports.mysql:getConn("core"), "UPDATE `accounts` SET `password`=?, `salt`=NULL WHERE id=?", new_pass, accountData["id"]) then
+						local new_pass = passwordHash(password, "bcrypt")
+						if not dbExec(exports.mysql:getConn("mta"), "UPDATE `accounts` SET `password`=?, `salt`=NULL WHERE id=?", new_pass, accountData["id"]) then
 							triggerClientEvent(client,"set_warning_text",client,"Login","Password conversion failed for account name '".. username .."'!")
 							return false
 						end
 					else -- Else if new
-						local verified = bcrypt_checkpw(sha256(password):lower(), accountData["password"]:gsub("bcrypt_sha256%$", "")) -- Take out Django's junk to verify
+						local verified = passwordVerify(password, accountData["password"]) -- Take out Django's junk to verify
 
 						if not verified then
-							triggerClientEvent(client,"set_warning_text",client,"Login","Password is incorrect for account name '".. username .."'!")
+							triggerClientEvent(client,"set_warning_text",client,"Login","Wrong password for this account'".. username .."'!")
 							return false
 						end
 					end
@@ -115,8 +115,8 @@ function playerLogin(username,password,checksave)
 						local playerAccountID = tonumber(getElementData(thePlayer, "account:id"))
 						if (playerAccountID) then
 							if (playerAccountID == tonumber(accountData["id"])) and (thePlayer ~= client) then
-								kickPlayer(thePlayer, thePlayer, "Someone else has logged into your account.")
-								triggerClientEvent(client,"set_authen_text",client,"Login","Account is currently online. Disconnecting other user..")
+								kickPlayer(thePlayer, thePlayer, "Someone logged in your account.")
+								triggerClientEvent(client,"set_authen_text",client,"Login","Someone is playing on your account, kicking..")
 								break
 							end
 						end
@@ -172,7 +172,7 @@ function playerLogin(username,password,checksave)
 				
 					--Admins serial whitelist
 					if not exports.serialwhitelist:check(client) then
-						triggerClientEvent(client,"set_warning_text",client,"Login","You're not allowed to connect to server from that PC, check UCP.")
+						triggerClientEvent(client,"set_warning_text",client,"Login","You can't join this server using this computer.")
 						--REMOVE STAFF PERMISSIONS / MAXIME
 						setElementDataEx(client, "admin_level", 0, true)
 						setElementDataEx(client, "supporter_level", 0, true)
@@ -231,7 +231,7 @@ function playerLogin(username,password,checksave)
 				
 					exports.logs:dbLog("ac"..tostring(accountData["id"]), 27, "ac"..tostring(accountData["id"]), "Connected from "..getPlayerIP(client) .. " - "..getPlayerSerial(client) )
 					mysql:query_free("UPDATE `account_details` SET `mtaserial`='" .. mysql:escape_string(getPlayerSerial(client)) .. "' WHERE `account_id`='".. mysql:escape_string(tostring(accountData["id"])) .."'")
-					dbExec(exports.mysql:getConn("core"), "UPDATE `accounts` SET `ip`=? WHERE id=?", getPlayerIP(client), accountData.id)
+					dbExec(exports.mysql:getConn("mta"), "UPDATE `accounts` SET `ip`=? WHERE id=?", getPlayerIP(client), accountData.id)
 					--[[
 					local dataTable = { }
 					table.insert(dataTable, { "account:characters", characterList( client ) } )
@@ -274,10 +274,10 @@ function playerLogin(username,password,checksave)
 					triggerClientEvent(client,"set_warning_text",client,"Login","Account name '".. username .."' doesn't exist!")
 				end
 			else
-				triggerClientEvent(client,"set_warning_text",client,"Login","Failed to connect to game server. Database error!")
+				triggerClientEvent(client,"set_warning_text",client,"Login","Couldn't connect to the server!")
 				dbFree(qh)
 			end
-		end, {username, password, checksave, client}, exports.mysql:getConn("core"), preparedQuery, username)
+		end, {username, password, checksave, client}, exports.mysql:getConn("mta"), preparedQuery, username)
 end
 addEvent("accounts:login:attempt",true)
 addEventHandler("accounts:login:attempt",getRootElement(),playerLogin)
@@ -296,7 +296,7 @@ function goFromLoginToSelectionScreen(player)
 	end
 
 	-- Check if player passed application
-	if (getElementData(player, "appstate") or 0) < 3 then
+	if (getElementData(player, "appstate") or 0) < 0 then
 		if exports.integration:isPlayerTrialAdmin(player) or exports.integration:isPlayerSupporter(player) then
 			dbExec( exports.mysql:getConn('mta'), "UPDATE account_details SET appstate=3, appreason=NULL WHERE account_id=? ", getElementData(player,"account:id") )
 		else
@@ -363,29 +363,30 @@ function playerRegister(username,password,confirmPassword, email)
 
 				local usernameExisted = mysql:fetch_assoc(Q2)
 				if (mysql:num_rows(Q2) > 0) and usernameExisted["id"] ~= "1" then
-					triggerClientEvent(client,"set_warning_text",client,"Register","Multiple Accounts is not allowed (Existed: "..tostring(usernameExisted["username"])..")")
+					triggerClientEvent(client,"set_warning_text",client,"Register","Multiple accounts aren't allowed (Current account: "..tostring(usernameExisted["username"])..")")
 					return false
 				end
 				mysql:free_result(Q2)
 
 				--START CREATING ACCOUNT.
-				local encryptedPW = "bcrypt_sha256$" .. bcrypt_hashpw(sha256(password):lower(), bcrypt_gensalt(12)) -- 12 work factor // https://github.com/django/django/blob/master/django/contrib/auth/hashers.py#L404
+				local encryptedPW = passwordHash(password, "bcrypt",{}) 
 				local ipAddress = getPlayerIP(client)
-				preparedQuery3 = "INSERT INTO `accounts` SET `username`=?, `password`=?, `email`=?, `registerdate`=NOW(), `ip`=?, `activated`='0' "
-				local userid = dbExec(exports.mysql:getConn("core"), preparedQuery3, username, encryptedPW, email, ipAddress)
+				preparedQuery3 = "INSERT INTO `accounts` SET `username`=?, `password`=?, `email`=?, `registerdate`=NOW(), `ip`=?, `activated`='1' "
+				local userid = dbExec(exports.mysql:getConn("mta"), preparedQuery3, username, encryptedPW, email, ipAddress)
 				if userid then
 					triggerClientEvent(client,"accounts:register:complete",client, username, password)
 					dbQuery(function(qh, client)
 						local result = dbPoll(qh, 0)
 						if result and #result == 1 then
 							if dbExec(exports.mysql:getConn("mta"), "INSERT INTO account_details SET `account_id`=?, `mtaserial`=?", result[1].id, mtaSerial) then
-								callRemote("http://127.0.0.1:8000/api/send-activation-mail/",
-									function(returns)
-										if not returns.success then
-											outputDebugString("MTA Activation Eamil Postback "..returns.error)
-										end
-									end,
-								{id=result[1].id})
+							-- This is the activation using email
+								--callRemote("http://127.0.0.1:8000/api/send-activation-mail/",
+									--function(returns)
+										--if not returns.success then
+											--outputDebugString("MTA Activation Eamil Postback "..returns.error)
+										--end
+									--end,
+								--{id=result[1].id})
 							else
 								triggerClientEvent(client,"set_warning_text",client,"Register","Error code 0005 occurred.")
 							end
@@ -393,19 +394,19 @@ function playerRegister(username,password,confirmPassword, email)
 							triggerClientEvent(client,"set_warning_text",client,"Register","Error code 0004 occurred.")
 							dbFree(qh)
 						end
-					end, {client}, exports.mysql:getConn("core"), "SELECT id FROM accounts WHERE username=?", username)
+					end, {client}, exports.mysql:getConn("mta"), "SELECT id FROM accounts WHERE username=?", username)
 				else
-					triggerClientEvent(client,"set_warning_text",client,"Register","Could not create new account.")
+					triggerClientEvent(client,"set_warning_text",client,"Register","Couldn't create an a account.")
 					return false
 				end
 			else
-				triggerClientEvent(client,"set_warning_text",client,"Register","Username or email existed.")
+				triggerClientEvent(client,"set_warning_text",client,"Register","Nickname or email already exists!")
 			end
 		else
 			triggerClientEvent(client,"set_warning_text",client,"Register","Error code 0002 occurred.")
 			dbFree(qh)
 		end
-	end, {username, password, confirmPassword, email, client}, exports.mysql:getConn("core"), preparedQuery1, username, email)
+	end, {username, password, confirmPassword, email, client}, exports.mysql:getConn("mta"), preparedQuery1, username, email)
 end
 addEvent("accounts:register:attempt",true)
 addEventHandler("accounts:register:attempt",getRootElement(),playerRegister)

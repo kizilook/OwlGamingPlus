@@ -538,7 +538,7 @@ function doPayDayPlayer(value, isForcePayday)
 		--Referring
 		if getElementData(value, "referrer") and getElementData(value, "hoursplayed") == 50 then
 			local gc2Award = 150
-			dbExec( exports.mysql:getConn('core'), "UPDATE `accounts` SET `credits`=`credits`+? WHERE `id`=? ", gc2Award, getElementData(value, "referrer") )
+			dbExec( exports.mysql:getConn('mta'), "UPDATE `accounts` SET `credits`=`credits`+? WHERE `id`=? ", gc2Award, getElementData(value, "referrer") )
 			dbExec( exports.mysql:getConn('mta'), "INSERT INTO `don_purchases` SET `name`=?, `cost`=?, `account`=? ", "Referring reward - Your friend '"..getElementData(value, "account:username").."' who has reached 50 hoursplayed on character '"..exports.global:getPlayerName(value).."'", gc2Award, getElementData(value, "referrer") )
 			exports.global:sendMessageToAdmins("[ACHIEVEMENT] Player '"..exports.cache:getUsernameFromId(getElementData(value, "referrer")).."' has been rewarded with "..gc2Award.." GC(s) for referring his friend '"..getElementData(value, "account:username").."' who has reached 50 hoursplayed on character '"..exports.global:getPlayerName(value).."'! ")
 			exports.announcement:makePlayerNotification(getElementData(value, "referrer"), "Congratulations! You were rewarded with "..gc2Award.." GC(s) for referring your friend", getElementData(value, "account:username").." has reached 50 hoursplayed on character "..exports.global:getPlayerName(value)..".")
